@@ -1,0 +1,30 @@
+---
+- hosts: all
+  become: yes
+  become_user: root
+  tasks:
+  - name: upgrade all packages
+    dnf: name="*" state=latest
+  - name: Have git, wget, ag etc.
+    dnf: name={{item}} state=latest
+    with_items:
+       - git
+       - wget
+       - the_silver_searcher
+       - dnf-plugins-core
+  - name: Have docker repo
+    shell:  'dnf config-manager \
+      --add-repo \
+      https://download.docker.com/linux/fedora/docker-ce.repo'
+  - name: Have dnf cache updated
+    shell: 'dnf makecache'
+  - name: Have docker-ce
+    dnf: name=docker-ce
+  - name: add docker group
+    group: name=docker state=present
+  - name: add user to docker group
+    user: name=vagrant groups=docker state=present
+  - name: Ensure Docker is started
+    systemd:
+      state: started
+      name: docker
