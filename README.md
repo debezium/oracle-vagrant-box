@@ -4,14 +4,14 @@ This is a Vagrant configuration for setting up a virtual machine based on Fedora
 an Oracle DB instance for testing.
 Note that you'll need to download the Oracle installation yourself in order for preparing the testing environment.
 
-Ansible is used for provisioning the VM, see _playbook.yml_ for the complete set-up.
+[Ansible](http://docs.ansible.com/ansible/latest/index.html) is used for provisioning the VM, see _playbook.yml_ for the complete set-up.
 
 ## Preparations
 
 Make sure to have the following installed:
 
-* VirtualBox (https://www.virtualbox.org/)
-* Vagrant (https://www.vagrantup.com/)
+* [VirtualBox](https://www.virtualbox.org/)
+* [Vagrant](https://www.vagrantup.com/)
 
 ## Installation
 
