@@ -145,8 +145,7 @@ DECLARE
   tables  DBMS_UTILITY.UNCL_ARRAY;
   schemas DBMS_UTILITY.UNCL_ARRAY;
 BEGIN
-    tables(1)  := 'debezium.customer';
-    tables(2)  := 'debezium.customer2';
+    tables(1)  := NULL;
     schemas(1) := 'debezium';
   DBMS_XSTREAM_ADM.CREATE_OUTBOUND(
     server_name     =>  'dbzxout',
