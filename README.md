@@ -42,7 +42,7 @@ git clone https://github.com/oracle/docker-images.git
 Build the Docker image with the database:
 
 ```
-cd docker-images/OracleDatabase/dockerfiles
+cd docker-images/OracleDatabase/SingleInstance/dockerfiles
 cp /vagrant_data/linuxx64_12201_database.zip 12.2.0.1
 ./buildDockerImage.sh -v 12.2.0.1 -i -e
 ```
