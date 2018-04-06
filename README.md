@@ -57,12 +57,25 @@ sudo chgrp 54321 /home/vagrant/oradata/recovery_area
 sudo chown 54321 /home/vagrant/oradata/recovery_area
 ```
 
-Run the container:
+Run the container
 
 ```
 docker run --name dbz_oracle -p 1521:1521 -e ORACLE_PWD=top_secret -v /home/vagrant/oradata/:/opt/oracle/oradata oracle/database:12.2.0.1-ee
 ```
+and wait for the database to start.
 
+### Database configuration
+The last step to do is to configure the started database.
+You can configure it in automated way using provided installation script or you can follow the manual steps to understand the necessary pre-conditions.
+
+To configure the database automatically run
+```
+cat setup.sh | docker exec -i dbz_oracle bash
+```
+When the script execution is completed the database is fully configured and prepared to send change events into Debezium.
+The following chapter explains steps that are executed as part of the configuration process.
+
+#### Manual steps
 Set archive log mode and enable GG replication:
 
 ```
@@ -76,7 +89,8 @@ shutdown immediate
 startup mount
 alter database archivelog;
 alter database open;
-archive log list # Should show "Database log mode: Archive Mode"
+-- Should show "Database log mode: Archive Mode"
+archive log list
 
 exit;
 ```
