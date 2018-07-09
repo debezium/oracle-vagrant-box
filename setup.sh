@@ -13,29 +13,28 @@ sqlplus /nolog <<- EOF
 	alter database archivelog;
 	alter database open;
         -- Should show "Database log mode: Archive Mode"
-	archive log list 
+	archive log list
 	exit;
 EOF
 
 # Create XStream admin user
 sqlplus sys/top_secret@//localhost:1521/ORCLCDB as sysdba <<- EOF
-	CREATE TABLESPACE xstream_tbs DATAFILE '/opt/oracle/oradata/ORCLCDB/xstream_tbs.dbf'
+	CREATE TABLESPACE xstream_adm_tbs DATAFILE '/opt/oracle/oradata/ORCLCDB/xstream_adm_tbs.dbf'
 	  SIZE 25M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
 	exit;
 EOF
 sqlplus sys/top_secret@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
-	CREATE TABLESPACE xstream_tbs DATAFILE '/opt/oracle/oradata/ORCLCDB/ORCLPDB1/xstream_tbs.dbf'
+	CREATE TABLESPACE xstream_adm_tbs DATAFILE '/opt/oracle/oradata/ORCLCDB/ORCLPDB1/xstream_adm_tbs.dbf'
 	  SIZE 25M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
 	exit;
 EOF
 sqlplus sys/top_secret@//localhost:1521/ORCLCDB as sysdba <<- EOF
 	CREATE USER c##xstrmadmin IDENTIFIED BY xsa
-	  DEFAULT TABLESPACE xstream_tbs
-	  QUOTA UNLIMITED ON xstream_tbs
+	  DEFAULT TABLESPACE xstream_adm_tbs
+	  QUOTA UNLIMITED ON xstream_adm_tbs
 	  CONTAINER=ALL;
 
 	GRANT CREATE SESSION, SET CONTAINER TO c##xstrmadmin CONTAINER=ALL;
-	GRANT DBA TO c##xstrmadmin;
 
 	BEGIN
 	   DBMS_XSTREAM_AUTH.GRANT_ADMIN_PRIVILEGE(
@@ -62,6 +61,30 @@ sqlplus sys/top_secret@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
 	exit;
 EOF
 
+# Create XStream user
+sqlplus sys/top_secret@//localhost:1521/ORCLCDB as sysdba <<- EOF
+  CREATE TABLESPACE xstream_tbs DATAFILE '/opt/oracle/oradata/ORCLCDB/xstream_tbs.dbf'
+	  SIZE 25M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
+  exit;
+EOF
+sqlplus sys/top_secret@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
+  CREATE TABLESPACE xstream_tbs DATAFILE '/opt/oracle/oradata/ORCLCDB/ORCLPDB1/xstream_tbs.dbf'
+	  SIZE 25M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
+  exit;
+EOF
+sqlplus sys/top_secret@//localhost:1521/ORCLCDB as sysdba <<- EOF
+  CREATE USER c##xstrm IDENTIFIED BY xs
+	  DEFAULT TABLESPACE xstream_tbs
+	  QUOTA UNLIMITED ON xstream_tbs
+	  CONTAINER=ALL;
+
+  GRANT CREATE SESSION TO c##xstrm CONTAINER=ALL;
+  GRANT SET CONTAINER TO c##xstrm CONTAINER=ALL;
+  GRANT SELECT ON V_\$DATABASE to c##xstrm CONTAINER=ALL;
+
+	exit;
+EOF
+
 # Create XStream Outbound server
 sqlplus c##xstrmadmin/xsa@//localhost:1521/ORCLCDB <<- EOF
 	DECLARE
@@ -78,4 +101,15 @@ sqlplus c##xstrmadmin/xsa@//localhost:1521/ORCLCDB <<- EOF
 	/
 
 	exit;
+EOF
+
+sqlplus sys/top_secret@//localhost:1521/ORCLCDB as sysdba <<- EOF
+  BEGIN
+    DBMS_XSTREAM_ADM.ALTER_OUTBOUND(
+      server_name  => 'dbzxout',
+      connect_user => 'c##xstrm');
+  END;
+  /
+
+  exit;
 EOF
