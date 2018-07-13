@@ -211,7 +211,7 @@ exit;
 Alter the XStream Outbound server to allow the `xstrm` user to connect to it:
 
 ```
-docker exec -ti dbz_oracle sqlplus sys/top_secret@//localhost:1521/ORCLCDB
+docker exec -ti dbz_oracle sqlplus sys/top_secret@//localhost:1521/ORCLCDB as sysdba
 
 BEGIN
   DBMS_XSTREAM_ADM.ALTER_OUTBOUND(
