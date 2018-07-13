@@ -81,8 +81,8 @@ sqlplus sys/top_secret@//localhost:1521/ORCLCDB as sysdba <<- EOF
   GRANT CREATE SESSION TO c##xstrm CONTAINER=ALL;
   GRANT SET CONTAINER TO c##xstrm CONTAINER=ALL;
   GRANT SELECT ON V_\$DATABASE to c##xstrm CONTAINER=ALL;
-
-	exit;
+  GRANT FLASHBACK ANY TABLE TO c##xstrm CONTAINER=ALL;
+  exit;
 EOF
 
 # Create XStream Outbound server
