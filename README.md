@@ -23,13 +23,28 @@ git clone https://github.com/debezium/oracle-vagrant-box.git
 
 Download the Oracle [installation file](http://www.oracle.com/technetwork/database/enterprise-edition/downloads/index.html) and provide it within the _data_ directory.
 
-Change into the project directory, bootstrap the VM and SSH into it:
+Change into the project directory, create a folder for the data, and bootstrap the VM:
 
 ```
 cd oracle-vagrant-box
+mkdir data
 vagrant up
+```
+
+_If you get the error `Vagrant was unable to mount VirtualBox shared folders. This is usually because the filesystem "vboxsf" is not available.` then run :_
+
+```
+vagrant plugin install vagrant-vbguest
+vagrant reload
+vagrant provision
+```
+
+Now SSH into the VM: 
+
+```
 vagrant ssh
 ```
+
 
 ## Setting up Oracle DB
 
