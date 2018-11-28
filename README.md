@@ -23,11 +23,10 @@ git clone https://github.com/debezium/oracle-vagrant-box.git
 
 Download the Oracle [installation file](http://www.oracle.com/technetwork/database/enterprise-edition/downloads/index.html) and provide it within the _data_ directory.
 
-Change into the project directory, create a folder for the data, and bootstrap the VM:
+Change into the project directory, and bootstrap the VM:
 
 ```
 cd oracle-vagrant-box
-mkdir data
 vagrant up
 ```
 
