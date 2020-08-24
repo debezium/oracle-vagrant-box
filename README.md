@@ -64,7 +64,7 @@ cp /vagrant_data/linuxx64_12201_database.zip 12.2.0.1
 Create a data directory and run the container:
 
 ```
-mkdir -p /home/vagrant/oradata/recovery_area
+sudo mkdir -p /home/vagrant/oradata/recovery_area
 sudo chgrp 54321 /home/vagrant/oradata
 sudo chown 54321 /home/vagrant/oradata
 sudo chgrp 54321 /home/vagrant/oradata/recovery_area
@@ -84,7 +84,13 @@ Note: as foreseen by the Oracle Docker image, the following assumes that the mul
 with the container database being named `ORCLCDB` and a pluggable database being named `ORCLPDB1`.
 
 The last step to do is to configure the started database.
-You can configure it in automated way using provided installation script or you can follow the manual steps to understand the necessary pre-conditions.
+The database can be configured to use [xstreams](#xstreams) or [log miner](#logminer).
+Please see each section for details on configuration steps.
+
+<a name="xstreams"></a>
+### XStreams database configuration
+
+You can configure it in automated way using provided installation script or you can follow the [manual steps](#xstreams-manual) to understand the necessary pre-conditions.
 
 To configure the database automatically run:
 
@@ -94,7 +100,8 @@ cat setup.sh | docker exec -i dbz_oracle bash
 When the script execution is completed the database is fully configured and prepared to send change events into Debezium.
 The following chapter explains steps that are executed as part of the configuration process.
 
-#### Manual steps
+<a name ="xstreams-manual"></a>
+#### XStreams Manual steps
 
 Set archive log mode and enable GG replication:
 
@@ -237,6 +244,196 @@ END;
 
 exit;
 ```
+
+<a name="logminer"></a>
+### Log Miner database configuration
+
+You can configure the database to use Log Miner in an automated way using the provided installation script.
+However prior to running the script, there are some manual steps you must perform.
+
+First you need to determine the current redo log state in the database:
+
+```
+SQL> select group#, bytes/1024/1024, status from v$log order by 1;
+
+    GROUP# BYTES/1024/1024 STATUS
+---------- --------------- ----------------
+	 1	       200 INACTIVE
+	 2	       200 CURRENT
+	 3	       200 UNUSED
+
+SQL> select group#, member from v$logfile order by 1, 2;
+
+GROUP# MEMBER
+------ ------------------------------------------------------------
+	 1 /opt/oracle/oradata/ORCLCDB/redo01.log
+	 2 /opt/oracle/oradata/ORCLCDB/redo02.log
+	 3 /opt/oracle/oradata/ORCLCDB/redo03.log
+
+SQL> select group#, bytes/1024/1024, status from v$log order by 1;
+
+    GROUP# BYTES/1024/1024 STATUS
+---------- --------------- ----------------
+	 1	       200 INACTIVE
+	 2	       200 CURRENT
+	 3	       200 INACTIVE
+```
+
+Clear and drop redo log files for logfile group 1.
+In order to add multiple log files, the group's logfile descriptor must be dropped.
+The default size is `200M`, we will continue to use this for now.
+
+```
+SQL> alter database clear logfile group 1;
+
+Database altered.
+
+SQL> alter database drop logfile group 1;
+
+Database altered.
+
+SQL> alter database add logfile group 1 ('/opt/oracle/oradata/ORCLCDB/redo01.log', '/opt/oracle/oradata/ORCLCDB/redo01a.log') size 200M reuse;
+
+Database altered.
+```
+
+Clear and drop redo log files for logfile group 3.
+Just like group 1, the logfile descriptor must be dropped before multiple log files can be added.
+The default size is `200M`, we will continue to use this for now.
+
+```
+SQL> alter database clear logfile group 3;
+
+Database altered.
+
+SQL> alter database drop logfile group 3;
+
+Database altered.
+
+SQL> alter database add logfile group 3 ('/opt/oracle/oradata/ORCLCDB/redo03.log', '/opt/oracle/oradata/ORCLCDB/redo03a.log') size 200M reuse;
+
+Database altered.
+```
+
+
+In order to modify logfile group 2, a log switch must be performed.
+
+```
+SQL> alter system switch logfile;
+
+System altered.
+```
+
+Now continue to query the database until logfile group 2 is `INACTIVE`.
+This can take a while until the database transitions from `ACTIVE` to `INACTIVE`.
+
+Once it has moved to `INACTIVE`, clear and drop redo log files for logfile group 2.
+Just like group 1, the logfile descriptor must be dropped before multiple log files can be added.
+The default size is `200M`, we will continue to use this for now.
+
+```
+SQL> alter database clear logfile group 2;
+
+Database altered.
+
+SQL> alter database drop logfile group 2;
+
+Database altered.
+
+SQL> alter database add logfile group 2 ('/opt/oracle/oradata/ORCLCDB/redo02.log', '/opt/oracle/oradata/ORCLCDB/redo02a.log') size 200M reuse;
+
+Database altered.
+```
+
+At this point, the following should be the database state:
+
+```
+SQL> select group#, bytes/1024/1024, status from v$log order by 1;
+
+    GROUP# BYTES/1024/1024 STATUS
+---------- --------------- ----------------
+	 1	       200 CURRENT
+	 2	       200 UNUSED
+	 3	       200 UNUSED
+
+SQL> select group#, member from v$logfile order by 1, 2;
+
+GROUP# MEMBER
+------ ------------------------------------------------------------
+	 1 /opt/oracle/oradata/ORCLCDB/redo01.log
+	 1 /opt/oracle/oradata/ORCLCDB/redo01a.log
+	 2 /opt/oracle/oradata/ORCLCDB/redo02.log
+	 
+GROUP# MEMBER
+------ ------------------------------------------------------------
+	 2 /opt/oracle/oradata/ORCLCDB/redo02a.log
+	 3 /opt/oracle/oradata/ORCLCDB/redo03.log
+	 3 /opt/oracle/oradata/ORCLCDB/redo03a.log
+
+6 rows selected.
+```
+
+At this point the redo logs have 3 redo groups, but we ideally want to use `5` or `7`.
+For testing purposes we can rely on `5` for our use case.
+In order to add two additional redo groups the database needs to be altered:
+
+```
+SQL> alter database add logfile group 4 ('/opt/oracle/oradata/ORCLCDB/redo04.log', '/opt/oracle/oradata/ORCLCDB/redo04a.log') size 200M reuse;
+
+Database altered.
+
+SQL> alter database add logfile group 5 ('/opt/oracle/oradata/ORCLCDB/redo05.log', '/opt/oracle/oradata/ORCLCDB/redo05a.log') size 200M reuse;
+
+Database altered.
+```
+
+At this point the Oracle redo logs queries should give you similar output to the following:
+
+```
+SQL> select group#, bytes/1024/1024, status from v$log order by 1;
+
+    GROUP# BYTES/1024/1024 STATUS
+---------- --------------- ----------------
+	 1	       200 CURRENT
+	 2	       200 UNUSED
+	 3	       200 UNUSED
+	 4         200 UNUSED
+	 5         200 UNUSED
+
+SQL> select group#, member from v$logfile order by 1, 2;
+
+GROUP# MEMBER
+------ ------------------------------------------------------------
+	 1 /opt/oracle/oradata/ORCLCDB/redo01.log
+	 1 /opt/oracle/oradata/ORCLCDB/redo01a.log
+	 2 /opt/oracle/oradata/ORCLCDB/redo02.log
+	 
+GROUP# MEMBER
+------ ------------------------------------------------------------
+	 2 /opt/oracle/oradata/ORCLCDB/redo02a.log
+	 3 /opt/oracle/oradata/ORCLCDB/redo03.log
+	 3 /opt/oracle/oradata/ORCLCDB/redo03a.log
+
+GROUP# MEMBER
+------ ------------------------------------------------------------
+	 4 /opt/oracle/oradata/ORCLCDB/redo04.log
+	 4 /opt/oracle/oradata/ORCLCDB/redo04a.log
+	 5 /opt/oracle/oradata/ORCLCDB/redo05.log
+
+GROUP# MEMBER
+------ ------------------------------------------------------------
+	 5 /opt/oracle/oradata/ORCLCDB/redo05a.log
+	 	 
+10 rows selected.
+```
+
+At this point the configuration script for Log Miner can be used to setup the rest of the database.
+
+```
+cat setup-logminer.sh | docker exec -i dbz_oracle bash
+```
+
+When the script execution is completed the database is fully configured and prepared to send change events into Debezium.
 
 ## License
 
