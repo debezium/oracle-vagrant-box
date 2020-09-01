@@ -19,14 +19,16 @@ Clone this repository:
 
 ```
 git clone https://github.com/debezium/oracle-vagrant-box.git
+cd oracle-vagrant-box
+mkdir -p data
+cp setup.sh data/
 ```
 
-Download the Oracle [installation file](http://www.oracle.com/technetwork/database/enterprise-edition/downloads/index.html) and provide it within the _data_ directory.
+Download the Oracle [installation file](http://www.oracle.com/technetwork/database/enterprise-edition/downloads/index.html) and provide it within the previously created _data_ directory.
 
 Change into the project directory, and bootstrap the VM:
 
 ```
-cd oracle-vagrant-box
 vagrant up
 ```
 
@@ -89,7 +91,7 @@ You can configure it in automated way using provided installation script or you 
 To configure the database automatically run:
 
 ```
-cat setup.sh | docker exec -i dbz_oracle bash
+cat /vagrant_data/setup.sh | docker exec -i dbz_oracle bash
 ```
 When the script execution is completed the database is fully configured and prepared to send change events into Debezium.
 The following chapter explains steps that are executed as part of the configuration process.
