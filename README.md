@@ -256,6 +256,10 @@ However prior to running the script, there are some manual steps you must perfor
 First you need to determine the current redo log state in the database:
 
 ```
+$ docker exec -ti -e ORACLE_SID=ORCLCDB dbz_oracle sqlplus /nolog
+
+SQL> CONNECT sys/top_secret AS SYSDBA
+
 SQL> select group#, bytes/1024/1024, status from v$log order by 1;
 
     GROUP# BYTES/1024/1024 STATUS
@@ -432,7 +436,7 @@ GROUP# MEMBER
 At this point the configuration script for Log Miner can be used to setup the rest of the database.
 
 ```
-cat setup-logminer.sh | docker exec -i dbz_oracle bash
+cat /vagrant_data/setup-logminer.sh | docker exec -i dbz_oracle bash
 ```
 
 When the script execution is completed the database is fully configured and prepared to send change events into Debezium.
