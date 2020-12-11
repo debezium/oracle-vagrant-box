@@ -82,6 +82,7 @@ sqlplus sys/top_secret@//localhost:1521/ORCLCDB as sysdba <<- EOF
   GRANT SET CONTAINER TO c##xstrm CONTAINER=ALL;
   GRANT SELECT ON V_\$DATABASE to c##xstrm CONTAINER=ALL;
   GRANT FLASHBACK ANY TABLE TO c##xstrm CONTAINER=ALL;
+  GRANT SELECT_CATALOG_ROLE TO c##xstrm CONTAINER=ALL;
   exit;
 EOF
 
