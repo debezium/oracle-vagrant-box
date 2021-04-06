@@ -92,7 +92,7 @@ Again, be mindful of the path used in the `add logfile` clause, this should be i
 ```
 alter database clear logfile group 2;
 alter database drop logfile group 2;
-alter database add logfile group 2 ('/opt/oracle/oradata/ORCLCDB/redo03.log') size 200M reuse; 
+alter database add logfile group 2 ('/opt/oracle/oradata/ORCLCDB/redo02.log') size 200M reuse; 
 ```
 
 ## Adding additional groups
