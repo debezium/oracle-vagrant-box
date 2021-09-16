@@ -43,7 +43,6 @@ sqlplus sys/top_secret@//localhost:1521/ORCLCDB as sysdba <<- EOF
   GRANT LOGMINING TO dbzuser;
 
   GRANT CREATE TABLE TO dbzuser;
-  GRANT ALTER ANY TABLE TO dbzuser;
   GRANT LOCK ANY TABLE TO dbzuser;
   GRANT CREATE SEQUENCE TO dbzuser;
 

@@ -44,7 +44,6 @@ sqlplus sys/top_secret@//localhost:1521/XE as sysdba <<- EOF
   GRANT SELECT ANY DICTIONARY TO dbzuser;
 
   GRANT CREATE TABLE TO dbzuser;
-  GRANT ALTER ANY TABLE TO dbzuser;
   GRANT LOCK ANY TABLE TO dbzuser;
   GRANT CREATE SEQUENCE TO dbzuser;
 
