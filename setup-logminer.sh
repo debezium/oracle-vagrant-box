@@ -49,7 +49,6 @@ sqlplus sys/top_secret@//localhost:1521/ORCLCDB as sysdba <<- EOF
   GRANT LOGMINING TO c##dbzuser CONTAINER=ALL;
 
   GRANT CREATE TABLE TO c##dbzuser CONTAINER=ALL;
-  GRANT ALTER ANY TABLE TO c##dbzuser CONTAINER=ALL;
   GRANT LOCK ANY TABLE TO c##dbzuser CONTAINER=ALL;
   GRANT CREATE SEQUENCE TO c##dbzuser CONTAINER=ALL;
 
