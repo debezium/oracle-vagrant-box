@@ -53,6 +53,7 @@ sqlplus sys/top_secret@//localhost:1521/ORCLCDB as sysdba <<- EOF
   GRANT SELECT ON V_\$LOGFILE TO dbzuser;
   GRANT SELECT ON V_\$ARCHIVED_LOG TO dbzuser;
   GRANT SELECT ON V_\$ARCHIVE_DEST_STATUS TO dbzuser;
+  GRANT SELECT ON V_\$TRANSACTION TO dbzuser;
 
   exit;
 EOF
